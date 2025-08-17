@@ -16,10 +16,10 @@ from schema.response import KeyframeServiceReponse
 
 class KeyframeQueryService:
     def __init__(
-            self, 
+            self,
             keyframe_vector_repo: KeyframeVectorRepository,
             keyframe_mongo_repo: KeyframeRepository,
-            
+
         ):
 
         self.keyframe_vector_repo = keyframe_vector_repo
@@ -29,11 +29,10 @@ class KeyframeQueryService:
     async def _retrieve_keyframes(self, ids: list[int]):
         keyframes = await self.keyframe_mongo_repo.get_keyframe_by_list_of_keys(ids)
         print(keyframes[:5])
-  
         keyframe_map = {k.key: k for k in keyframes}
         return_keyframe = [
             keyframe_map[k] for k in ids
-        ]   
+        ]
         return return_keyframe
 
     async def _search_keyframes(
@@ -43,7 +42,7 @@ class KeyframeQueryService:
         score_threshold: float | None = None,
         exclude_indices: list[int] | None = None
     ) -> list[KeyframeServiceReponse]:
-        
+
         search_request = MilvusSearchRequest(
             embedding=text_embedding,
             top_k=top_k,
@@ -52,7 +51,7 @@ class KeyframeQueryService:
 
         search_response = await self.keyframe_vector_repo.search_by_embedding(search_request)
 
-        
+
         filtered_results = [
             result for result in search_response.results
             if score_threshold is None or result.distance > score_threshold
@@ -72,7 +71,7 @@ class KeyframeQueryService:
         response = []
 
         for result in sorted_results:
-            keyframe = keyframe_map.get(result.id_) 
+            keyframe = keyframe_map.get(result.id_)
             if keyframe is not None:
                 response.append(
                     KeyframeServiceReponse(
@@ -84,7 +83,7 @@ class KeyframeQueryService:
                     )
                 )
         return response
-    
+
 
     async def search_by_text(
         self,
@@ -92,8 +91,8 @@ class KeyframeQueryService:
         top_k: int,
         score_threshold: float | None = 0.5,
     ):
-        return await self._search_keyframes(text_embedding, top_k, score_threshold, None)   
-    
+        return await self._search_keyframes(text_embedding, top_k, score_threshold, None)
+
 
     async def search_by_text_range(
         self,
@@ -110,12 +109,12 @@ class KeyframeQueryService:
         allowed_ids = set()
         for start, end in range_queries:
             allowed_ids.update(range(start, end + 1))
-        
-        
+
+
         exclude_ids = [id_ for id_ in all_ids if id_ not in allowed_ids]
 
-        return await self._search_keyframes(text_embedding, top_k, score_threshold, exclude_ids)   
-    
+        return await self._search_keyframes(text_embedding, top_k, score_threshold, exclude_ids)
+
 
     async def search_by_text_exclude_ids(
         self,
@@ -127,36 +126,4 @@ class KeyframeQueryService:
         """
         range_queries: a bunch of start end indices, and we just search inside these, ignore everything
         """
-        return await self._search_keyframes(text_embedding, top_k, score_threshold, exclude_ids)   
-    
-
-
-    
-
-
-
-
-    
-        
-
-
-
-        
-
-        
-
-        
-        
-        
-
-
-        
-
-        
-
-
-
-
-
-
-
+        return await self._search_keyframes(text_embedding, top_k, score_threshold, exclude_ids)
